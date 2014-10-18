@@ -103,16 +103,18 @@ action = function(host, port)
   local version = fields[4]:split("{")
   version = version[2]:gsub("\"", "")
   version = version:split(":")
+  -- if version number is in field 3, then we have more information in packet
   if (version[1] ~= "version") then
     version = fields[6]:gsub("\"", "")
 	version = version:split(":")
 	version[2] = version[3]
   end
   output["Version"] = version[2]
+  
   -- parse the protocol version number
   local protocol = fields[5]:split("}")
   protocol = protocol[1]:split(":")
-  
+  -- if protocol isn't in field 5, then we had more information in packet
   if( protocol[1] ~= "protocol") then
     protocol = fields[7]:gsub("\"", "")
 	protocol = protocol:split(":")
