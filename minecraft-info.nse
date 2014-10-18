@@ -103,11 +103,21 @@ action = function(host, port)
   local version = fields[4]:split("{")
   version = version[2]:gsub("\"", "")
   version = version:split(":")
+  if (version[1] ~= "version") then
+    version = fields[6]:gsub("\"", "")
+	version = version:split(":")
+	version[2] = version[3]
+  end
   output["Version"] = version[2]
   -- parse the protocol version number
   local protocol = fields[5]:split("}")
   protocol = protocol[1]:split(":")
-  output["Protocol"]= protocol[2]:gsub("\"", "")
+  
+  if( protocol[1] ~= "protocol") then
+    protocol = fields[7]:gsub("\"", "")
+	protocol = protocol:split(":")
+  end
+  output["Protocol"]= protocol[2]:gsub("}", "")
   -- return the output table
   return output
 end
