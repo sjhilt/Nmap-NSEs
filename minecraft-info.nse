@@ -96,6 +96,12 @@ action = function(host, port)
   size = size - pos + 2
   -- unpack a json string that contains descriptions
   local pos, json_string = bin.unpack("A" .. size, response, pos-1)
+  -- some hosts hve data, this is something that we could parse later, however
+  -- to stop get the string to end right, if string is > 1000, then we will just
+  -- terminate the json string, and not collect extra packets. 
+  if (string.len(json_string) > 1000) then
+    json_string = json_string .. "\"}}"
+  end
   -- convert string into json table
   local pos, value = json.parse(tostring(json_string))
   -- close socket before parsing
