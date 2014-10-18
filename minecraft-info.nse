@@ -35,17 +35,6 @@ categories = {"safe","discovery"}
 
 portrule = shortport.port_or_service(25565, "minecraft")
 
---
--- Function to split a string based on a separator
--- 
--- @param sep A separator to split the string upon
-function string:split(sep)
-  local sep, fields = sep or ":", {}
-  local pattern = string.format("([^%s]+)", sep)
-  self:gsub(pattern, function(c) fields[#fields+1] = c end)
-  return fields
-end
-
 ---
 --  Action Function that is used to run the NSE. This function will send the initial query to the
 --  host and port that were passed in via nmap. The initial response is parsed to determine if host
