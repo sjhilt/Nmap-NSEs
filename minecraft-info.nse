@@ -46,7 +46,13 @@ function string:split(sep)
   return fields
 end
 
-
+---
+--  Action Function that is used to run the NSE. This function will send the initial query to the
+--  host and port that were passed in via nmap. The initial response is parsed to determine if host
+--  is a Minecraft server. 
+--
+-- @param host Host that was scanned via nmap
+-- @param port port that was scanned via nmap
 action = function(host, port)
   -- this is a hand shake packet that is calculated based off the length of the IP address
   local init_packet = bin.pack("H", tonumber(string.len(host["ip"],16)))
