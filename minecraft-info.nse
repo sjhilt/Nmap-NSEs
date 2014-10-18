@@ -11,7 +11,8 @@ Online Players, Version number, and Protocol Number. This work was inspired by t
 shown in Shodan for Minecraft Servers. 
 
 ]]
-
+-- @usage
+-- nmap --script minecraft-info.nse -p 25565 <host>
 ---
 -- @output
 -- Host script results:
@@ -67,7 +68,7 @@ action = function(host, port)
   local constatus, conerr = sock:connect(host, port)
   -- if not successful debug error message and return nil
   if not constatus then
-    stdnse.print_debug(1,
+    stdnse.debug1(
       'Error establishing a TCP connection for %s - %s', host, conerr
       )
     return nil
@@ -79,7 +80,7 @@ action = function(host, port)
   -- receive response
   local rcvstatus, response = sock:receive()
   if(rcvstatus == false) then
-    stdnse.print_debug(1,"Receive error: %s", response)
+    stdnse.debug1("Receive error: %s", response)
     return nil
   end
   -- close socket before paresing 
