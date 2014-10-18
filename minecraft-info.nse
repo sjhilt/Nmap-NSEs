@@ -3,6 +3,7 @@ local comm   = require "comm"
 local stdnse = require "stdnse"
 local shortport = require "shortport"
 local unicode = require "unicode"
+local json = require "json"
 
 description = [[
 This script will query a Minecraft server for some basic information about the host. 
@@ -83,43 +84,28 @@ action = function(host, port)
     stdnse.debug1("Receive error: %s", response)
     return nil
   end
-  -- close socket before paresing 
+  -- get the length of the packet for a size offset
+  local size = string.len(response)
+  local pos = 1
+  local test = nil
+  -- while the charictar is not 0x7b({) get next char
+  while (test ~= 0x7b) do
+    pos, test =  bin.unpack("C", response, pos)
+  end  
+  -- set size offest to pos + 2
+  size = size - pos + 2
+  -- unpack a json string that contains descriptions
+  local pos, json_string = bin.unpack("A" .. size, response, pos-1)
+  -- convert string into json table
+  local pos, value = json.parse(tostring(json_string))
+  -- close socket before parsing
   sock:close()
-  -- split the fields in response based off comma
-  local fields = response:split(",")
-  -- first field is description field
-  local desc = fields[1]:split(":")
-  -- store description in output table
-  output["Description"] = desc[2]:gsub("\"", "")
-  -- parse the maximum number of players for this server
-  local max_player = fields[2]:split("{") 
-  max_player = max_player[2]:split(":")
-  output["Max Players"] = max_player[2]:gsub("\"", "") 
-  -- parse the number of players currently online
-  local online_player = fields[3]:split("}")
-  online_player = online_player[1]:split(":")
-  output["Online Players"] = online_player[2]:gsub("\"", "")
-  -- parse the version number
-  local version = fields[4]:split("{")
-  version = version[2]:gsub("\"", "")
-  version = version:split(":")
-  -- if version number is in field 3, then we have more information in packet
-  if (version[1] ~= "version") then
-    version = fields[6]:gsub("\"", "")
-	version = version:split(":")
-	version[2] = version[3]
-  end
-  output["Version"] = version[2]
-  
-  -- parse the protocol version number
-  local protocol = fields[5]:split("}")
-  protocol = protocol[1]:split(":")
-  -- if protocol isn't in field 5, then we had more information in packet
-  if( protocol[1] ~= "protocol") then
-    protocol = fields[7]:gsub("\"", "")
-	protocol = protocol:split(":")
-  end
-  output["Protocol"]= protocol[2]:gsub("}", "")
-  -- return the output table
+  -- use json output table to pack new table with just information we want to output
+  output["Description"] = value["description"]
+  output["Max Players"] = value["players"]["max"]
+  output["Players Online"] = value["players"]["online"]
+  output["Version"] = value["version"]["name"]
+  output["Protocol"] = value["version"]["protocol"]
+
   return output
 end
