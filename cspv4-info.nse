@@ -8,7 +8,9 @@ local table = require "table"
 description = [[
 This NSE script is used to send a CSPV4 packet to a remote device that has TCP 2222 open. This is a port used via CIP
 and used by CSPV4 on AB PLC5 systems. This will determine the Session ID of the remote device to verify it as a CSPV4
-compliant device.  
+compliant device.  CSPV4 or AB/Ethernet is used by Allen Bradley inside of its software products such as RSLinx to 
+communicate to the PLCs. This will help ideitify some Allen Bradley PLCs that do not communicate via Ethernet/IP. 
+Example: PLC5, SLC 500
 
 ]]
 ---
