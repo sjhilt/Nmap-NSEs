@@ -5,8 +5,11 @@ local stdnse = require "stdnse"
 local string = require "string"
 local table = require "table"
 
-description = [[
+description = [[ This Script is designed to query the I20100 command on Guardian AST Automatic Tank Gauge
+products. This script sends a single query and parses the response. This response is the Tank Inventory 
+of the ATG. 
 
+Based off of www.veeder.com/gold/download.cfm?doc_id=3668
 
 ]]
 
@@ -55,7 +58,7 @@ action = function(host, port)
   -- set timeout low in case we don't get a response
   sock:set_timeout(1000)
   -- query to pull the tank inventory
-  local tank_inventory = bin.pack("H", "014932303130300a")
+  local tank_inventory = "\x01I20100\n"
   -- Connect to the remote host
   local constatus, conerr = sock:connect(host, port)
   if not constatus then
