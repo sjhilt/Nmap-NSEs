@@ -33,8 +33,8 @@ function set_nmap(host, port)
 
   --set port Open
   port.state = "open"
-  -- set version name to ATG
-  port.version.name = "ATG"
+  -- set version name to  Guardian AST
+  port.version.name = " Guardian AST"
   nmap.set_port_version(host, port)
   nmap.set_port_state(host, port, "open")
 
