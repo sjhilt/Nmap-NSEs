@@ -24,7 +24,7 @@ categories = {"discovery", "intrusive"}
 
 --
 -- Function to define the portrule as per nmap standards
-portrule = shortport.port_or_service(10001, "tcpwrapped", "tcp")
+portrule = shortport.port_or_service(10001, "atg")
 ---
 --  Function to set the nmap output for the host, if a valid ATG packet
 --  is received then the output will show that the port as ATG  instead of
