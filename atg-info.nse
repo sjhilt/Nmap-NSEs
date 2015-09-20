@@ -25,7 +25,7 @@ Based off of www.veeder.com/gold/download.cfm?doc_id=3668
 --| I20100
 --| SEP 19, 2015  5:33 PM
 --|
---|    Fuel Comapyn
+--|    Fuel Company
 --|    12 Fake St
 --|    Anytown, USA 12345
 --|
