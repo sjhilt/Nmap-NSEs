@@ -114,8 +114,8 @@ action = function(host, port)
     sock:close()
     return "TIMEOUT: No response from query"
   end
-  -- if the first byte is 0x01 then likely the response is an ATG
-  if(string.byte(response,1) == 0x01) then
+  -- if the first byte is 0x01, or 0x0a then likely the response is an ATG
+  if(string.byte(response,1) == 0x01 or string.byte(response,1) == 0x0a) then
     local inventory_output = string.sub(response,2,-2)
     set_nmap(host, port)
     sock:close()
