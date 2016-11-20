@@ -84,11 +84,13 @@ action = function(host, port)
   -- unpack a json string that contains descriptions
   local pos, json_string = bin.unpack("A" .. size, response, pos-1)
   -- some hosts have data, this is something that we could parse later, however
-  -- to stop get the string to end right, if string is > 1000, then we will just
-  -- terminate the json string, and not collect extra packets. 
-  if (string.len(json_string) > 1000) then
-    json_string = json_string .. "\"}}"
-  end
+  -- to stop get the string I'll just split at favicon and use the first part 
+  -- of the string to only get the values before the favicon which contains 
+  -- the infromation we are going to parse later.
+  json_string = stdnse.strsplit("favicon", json_string)
+  json_string = json_string[1] .. "something\":{}}"
+  -- convert string into json table
+  local pos, value = json.parse(tostring(json_string))
   -- convert string into json table
   local pos, value = json.parse(tostring(json_string))
   -- close socket before parsing
