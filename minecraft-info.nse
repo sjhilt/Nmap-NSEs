@@ -91,6 +91,11 @@ action = function(host, port)
     json_string = stdnse.strsplit("favicon", json_string)
     json_string = json_string[1] .. "something\":{}}"
   end
+  -- sometimes its modinfo that is causing the issue
+  if(string.find(json_string, "modinfo") ~= nil) then
+    json_string = stdnse.strsplit("modinfo", json_string)
+    json_string = json_string[1] .. "something\":{}}"
+  end
   -- convert string into json table
   local pos, value = json.parse(tostring(json_string))
   -- convert string into json table
