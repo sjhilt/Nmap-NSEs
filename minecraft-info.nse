@@ -8,7 +8,6 @@ This script will query a Minecraft server for some basic information about the h
 The information that is queried is the Description, Maximum Number of Players, number of 
 Online Players, Version number, and Protocol Number. This work was inspired by the results 
 shown in Shodan for Minecraft Servers. 
-
 ]]
 -- @usage
 -- nmap --script minecraft-info.nse -p 25565 <host>
@@ -28,25 +27,25 @@ shown in Shodan for Minecraft Servers.
 --<elem key="Online Players">0</elem>
 --<elem key="Version">1.8</elem>
 --<elem key="Protocol">47</elem>
+--<elem key="Login Status">Original Server</elem>
 
-author = "Stephen Hilt"
+author = "Stephen Hilt & space1024"
 license = "Same as Nmap--See http://nmap.org/book/man-legal.html"
 categories = {"safe","discovery"}
 
 portrule = shortport.port_or_service(25565, "minecraft")
-
 ---
 --  Action Function that is used to run the NSE. This function will send the initial query to the
 --  host and port that were passed in via nmap. The initial response is parsed to determine if host
 --  is a Minecraft server. 
 --
 -- @param host Host that was scanned via nmap
--- @param port port that was scanned via nmap
+-- @param port port that was scanned via nmap 
 action = function(host, port)
-  -- this is a hand shake packet that is calculated based off the length of the IP address
-  local init_packet = bin.pack("H", tonumber(string.len(host["ip"],16)))
-  -- Packet built to query the information about the Minecraft Server
-  local ip_packet = bin.pack("HCA>SH", "002f" ,string.len(host["ip"]) , tostring(host["ip"]) , port["number"], "010100")
+  --http://wiki.vg/Protocol#Handshake
+  -- handshake (0x00) packet is formed by~: ip(len) + protocol_vers + ip_len(2 bytes) + ip(string) + port(2 bytes) + next_state(1 = status, 2 = login) + code
+  --currently using protocol 47 (1.8.x) but this haven't utility for status ¯\_(ツ)_/¯ 
+  local stat_packet = bin.pack("HHCA>SH", tonumber(string.len(host["ip"],16)) ,"002f" ,string.len(host["ip"]) , tostring(host["ip"]) , port["number"], "010100")
   -- create output table
   local output = stdnse.output_table()
   -- create socket
@@ -62,8 +61,7 @@ action = function(host, port)
     return nil
   end
   
-  sock:send(init_packet)
-  sock:send(ip_packet)
+  sock:send(stat_packet)
   
   -- receive response
   local rcvstatus, response = sock:receive()
@@ -100,14 +98,75 @@ action = function(host, port)
   local pos, value = json.parse(tostring(json_string))
   -- convert string into json table
   local pos, value = json.parse(tostring(json_string))
-  -- close socket before parsing
+    -- close socket before parsing
   sock:close()
+  
+  --http://wiki.vg/Protocol_version_numbers
+  local protocol_vers = tonumber(value["version"]["protocol"])
+  local login_handshake = bin.pack("H>sCA>SH", tonumber(string.len(host["ip"],16)) ,protocol_vers ,string.len(host["ip"]) , tostring(host["ip"]) , port["number"], "02")
+	--if you want you can do this in one line :)
+	--http://wiki.vg/Protocol#Login_Start
+	local username = "NmapBot" --change this if you need
+	local packet_id = "00"
+	local total_len = string.len(string.fromhex(packet_id)) + 1 + string.len(username)
+	local login_packet = bin.pack("CHCA", total_len, packet_id, string.len(username), username)
+	
+	local sock = nmap.new_socket()
+  
+  -- connect to remote host (again...)
+  local constatus, conerr = sock:connect(host, port)
+  -- if not successful debug error message and return nil
+  if not constatus then
+    stdnse.debug1(
+      'Error establishing a TCP connection for %s - %s', host, conerr
+      )
+    return nil
+  end
+  
+   
+	sock:send(login_handshake)
+	  sock:send(login_packet)
+	  
+	  --yea, i'd like create new variables :D
+  local rcvstatus, response2 = sock:receive()
+  if(rcvstatus == false) then
+    stdnse.debug1("Receive error: %s", response2)
+    return nil
+  end
+  local size = string.len(response2)
+  --check the response from the server
+  --http://wiki.vg/Protocol#Login
+  local resp_status
+    if (string.sub(response2,2,2) == "\x00") then
+		if size < 3 then
+			resp_status = "Error."
+		else
+			resp_status = tostring("%s%s","Error ", string.sub(response2,3))
+		end
+    elseif (string.sub(response2,2,2) == "\x01") then
+	resp_status = "Original server"
+	elseif (string.sub(response2,2,2) == "\x02") then
+	resp_status = "Cracked server"
+	elseif (response2 == "EOF") then
+	resp_status = "Null Response"
+    else
+	resp_status = tostring("Unknown packet id ", tonumber(string.sub(response2,2,2)))
+    end
+  
   -- use json output table to pack new table with just information we want to output
   output["Description"] = value["description"]
   output["Max Players"] = value["players"]["max"]
   output["Players Online"] = value["players"]["online"]
   output["Version"] = value["version"]["name"]
   output["Protocol"] = value["version"]["protocol"]
-
+  output["Login Status"] = resp_status
+  --output["Login Response"] = response2  --uncomment to view response returned by the server (login)
   return output
+end
+--i need this :/
+function string.fromhex(str)
+str = string.format("%s",str)
+    return (str:gsub('..', function (cc)
+        return string.char(tonumber(cc, 16))
+    end))
 end
