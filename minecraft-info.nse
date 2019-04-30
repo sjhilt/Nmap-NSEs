@@ -1,3 +1,4 @@
+local bin = require "bin" 
 local nmap   = require "nmap"
 local stdnse = require "stdnse"
 local shortport = require "shortport"
